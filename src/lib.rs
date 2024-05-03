@@ -196,6 +196,7 @@
     feature = "bigint", feature = "biguint",
     feature = "rational", feature = "rational32", feature = "rational64", feature = "bigrational",
     feature = "complex32", feature = "complex64",
+    feature = "decimal",
     feature = "f32", feature = "f64", )))]
 compile_error!("A least one underlying storage type must be enabled. See the features section of \
     uom documentation for available underlying storage type options.");
@@ -216,6 +217,14 @@ pub extern crate num_rational;
 pub extern crate num_complex;
 
 #[doc(hidden)]
+#[cfg(feature = "decimal-support")]
+pub extern crate rust_decimal;
+
+#[doc(hidden)]
+#[cfg(feature = "decimal-support")]
+pub extern crate rust_decimal_macros;
+
+#[doc(hidden)]
 #[cfg(feature = "serde")]
 pub extern crate serde;
 
@@ -224,7 +233,7 @@ pub extern crate typenum;
 
 #[cfg(all(
     test,
-    any(feature = "f32", feature = "f64", feature = "complex32", feature = "complex64")
+    any(feature = "f32", feature = "f64", feature = "complex32", feature = "complex64", feature = "decimal")
 ))]
 #[macro_use]
 extern crate approx;
@@ -292,6 +301,12 @@ pub mod num {
     #[cfg(feature = "complex-support")]
     pub mod complex {
         pub use num_complex::*;
+    }
+
+    #[cfg(feature = "decimal-support")]
+    pub mod decimal {
+        pub use rust_decimal::*;
+        pub use rust_decimal_macros::*;
     }
 }
 
@@ -694,6 +709,43 @@ storage_types! {
             // number yields the original number again.
             V::new(self, 0.0)
         }
+    }
+}
+
+storage_types! {
+    types: Decimal;
+
+    impl crate::Conversion<V> for V {
+        type T = V;
+
+        #[inline(always)]
+        fn constant(op: crate::ConstantOp) -> Self::T {
+            match op {
+                crate::ConstantOp::Add => -<Self::T as crate::num::Zero>::zero(),
+                crate::ConstantOp::Sub => <Self::T as crate::num::Zero>::zero(),
+            }
+        }
+
+        #[inline(always)]
+        fn conversion(&self) -> Self::T {
+            *self
+        }
+    }
+
+    impl crate::ConversionFactor<V> for V {
+        #[inline(always)]
+        fn powi(self, e: i32) -> Self {
+            <V as rust_decimal::MathematicalOps>::powd(self, Decimal::from(e))
+        }
+
+        #[inline(always)]
+        fn value(self) -> V {
+            self
+        }
+    }
+
+    impl crate::ConstZero for V {
+        const ZERO: Self = dec!(0.0);
     }
 }
 

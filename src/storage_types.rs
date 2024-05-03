@@ -115,6 +115,9 @@ macro_rules! storage_types {
             pub type VV = f64;
             $($tt)*));
     };
+    (@type ($(#[$attr:meta])*) @$M:ident Decimal ($($tt:tt)*)) => {
+        storage_type_decimal!(($(#[$attr])*) @$M ($($tt)*));
+    };
     (@type ($(#[$attr:meta])*) @$M:ident f32 ($($tt:tt)*)) => {
         storage_type_f32!(($(#[$attr])*) @$M ($($tt)*));
     };
@@ -142,6 +145,7 @@ macro_rules! storage_types {
         storage_types!(@type ($(#[$attr])*) @$M BigRational ($($tt)*));
         storage_types!(@type ($(#[$attr])*) @$M Complex32 ($($tt)*));
         storage_types!(@type ($(#[$attr])*) @$M Complex64 ($($tt)*));
+        storage_types!(@type ($(#[$attr])*) @$M Decimal ($($tt)*));
         storage_types!(@type ($(#[$attr])*) @$M f32 ($($tt)*));
         storage_types!(@type ($(#[$attr])*) @$M f64 ($($tt)*));
     };
@@ -196,6 +200,9 @@ macro_rules! storage_types {
     (@type ($(#[$attr:meta])*) @$M:ident Complex ($($tt:tt)*)) => {
         storage_types!(@type ($(#[$attr])*) @$M Complex32 ($($tt)*));
         storage_types!(@type ($(#[$attr])*) @$M Complex64 ($($tt)*));
+    };
+    (@type ($(#[$attr:meta])*) @$M:ident Decimal ($($tt:tt)*)) => {
+        storage_types!(@type ($(#[$attr])*) @$M Decimal ($($tt)*));
     };
     (@mod ($(#[$attr:meta])*) $M:ident, $V:ty; ($($tt:tt)*)) => {
         $(#[$attr])*
@@ -268,6 +275,7 @@ storage_type_types! {
     storage_type_bigrational!("bigrational", bigrational, $crate::num::BigRational);
     storage_type_complex32!("complex32", complex32, $crate::num::complex::Complex32);
     storage_type_complex64!("complex64", complex64, $crate::num::complex::Complex64);
+    storage_type_decimal!("decimal", decimal, $crate::num::decimal::rust_decimal::Decimal);
     storage_type_f32!("f32", f32, f32);
     storage_type_f64!("f64", f64, f64);
 }
